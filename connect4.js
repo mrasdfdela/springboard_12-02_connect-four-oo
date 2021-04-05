@@ -4,22 +4,32 @@
  * board fills (tie)
  */
 startBtn = document.querySelector('button');
-startBtn.addEventListener('click', () => { 
-  let four = new Game(6,7);
-  four.makeBoard();
-  four.makeHtmlBoard();
-})
+startBtn.addEventListener('click', (e) => { 
+  e.preventDefault();
+  
+  const p1Input = document.querySelector("input[name='p1']");
+  const p2Input = document.querySelector("input[name='p2']");
+  const playerOne = new Player(p1Input.name, p1Input.value);
+  const playerTwo = new Player(p2Input.name, p2Input.value);
+  document.querySelector('form').remove();
+
+  var four = new Game(6, 7, [playerOne, playerTwo]);
+});
 
 
 
 class Game {
-  constructor(height, width) {
+  constructor(height, width, playersArr) {
     this.HEIGHT = height;
     this.WIDTH = width;
-    this.currPlayer = 1; // active player: 1 or 2
-    // array of rows, each row is array of cells  (board[y][x])
-    this.board = this.makeBoard();
+    this.board = this.makeBoard(); // array of rows, each row is array of cells  (board[y][x])
+    
+    this.players = playersArr;
+    this.currPlayer = this.players[0];
+    
     this.gameOver = false;
+    this.makeBoard();
+    this.makeHtmlBoard();
   }
   
   // makeBoard: create in-JS board structure:
@@ -79,8 +89,9 @@ class Game {
   placeInTable(y, x) {
     const piece = document.createElement('div');
     piece.classList.add('piece');
-    piece.classList.add(`p${this.currPlayer}`);
+    piece.classList.add(`${this.currPlayer['player']}`);
     piece.style.top = -50 * (y + 2);
+    piece.style.backgroundColor = this.currPlayer['color']
   
     const spot = document.getElementById(`${y}-${x}`);
     spot.append(piece);
@@ -106,12 +117,12 @@ class Game {
         return;
       }
       // place piece in board and add to HTML table
-      this.board[y][x] = this.currPlayer;
+      this.board[y][x] = this.currPlayer['player'];
       this.placeInTable(y, x);
       
       // check for win
       if (this.checkForWin()) {
-        return this.endGame(`Player ${this.currPlayer} won!`);
+        return this.endGame(`Player ${this.currPlayer['player']} won!`);
       }
       
       // check for tie
@@ -120,7 +131,10 @@ class Game {
       }
         
       // switch players
-      this.currPlayer = this.currPlayer === 1 ? 2 : 1;
+      this.currPlayer =
+        this.currPlayer === this.players[0]
+          ? this.players[1]
+          : this.players[0];
     }
   }
   
@@ -156,7 +170,14 @@ class Game {
         y < this.HEIGHT &&
         x >= 0 &&
         x < this.WIDTH &&
-        this.board[y][x] === this.currPlayer
+        this.board[y][x] === this.currPlayer['player']
     );
+  }
+}
+
+class Player {
+  constructor(player, color) {
+    this.player = player;
+    this.color = color;
   }
 }
